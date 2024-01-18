@@ -1,6 +1,7 @@
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
+from django.utils.crypto import get_random_string
 from django.utils.translation import gettext_lazy as _
 
 
@@ -79,3 +80,14 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         ordering = ('-date_joined',)
+
+
+class EmailVerificationToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.token:
+            self.token = get_random_string(length=64)
+        return super(EmailVerificationToken, self).save(*args, **kwargs)
